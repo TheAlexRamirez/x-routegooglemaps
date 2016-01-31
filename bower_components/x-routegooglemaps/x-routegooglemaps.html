@@ -1,0 +1,181 @@
+<link rel="import" href="../google-map/google-map-directions.html">
+<link rel="import" href="../google-map/google-map.html">
+<link rel="import" href="../google-map/google-map-marker.html">
+<link rel="import" href="../google-map/google-map-poly.html">
+<link rel="import" href="../polymer/polymer.html">			
+<link rel="import" href="../paper-button/paper-button.html">	
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-material/paper-material.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../paper-item/paper-item.html">
+
+<dom-module id="x-routegooglemaps">
+	<style>
+		
+	paper-input {
+	  	padding: 15px;
+		width: calc(100% - 75px);	
+	}
+		
+	paper-button.custom {
+			
+    --paper-button-ink-color: var(--paper-pink-a200);
+    /* These could also be individually defined for each of the
+      specific css classes, but we'll just do it once as an example */
+    --paper-button-flat-keyboard-focus: {
+      background-color: var(--paper-pink-a200);
+      color: white !important;
+    };
+    --paper-button-raised-keyboard-focus: {
+      background-color: var(--paper-pink-a200) !important;
+      color: white !important;
+    };
+		width: 100%;
+  }
+	paper-button.indigo {
+    background-color: var(--paper-indigo-500);
+    color: white;
+    --paper-button-raised-keyboard-focus: {
+      background-color: var(--paper-pink-a200) !important;
+      color: white !important;
+    };
+	 	
+ }	
+	google-map {
+	    max-width: 100%;
+		height: 200px;
+	}
+
+	.form-style{
+		width: 50%;
+	}
+	
+	.distance{
+		font-size: 20px;	
+		text-align: center;
+		
+	}
+	.duration{
+		font-size: 20px;
+		text-align: center;	
+	}
+		
+	</style>
+	
+	<template>
+		
+	<div class="form-style">
+		
+		<div class="visible">
+		<google-map map="{{map}}" ></google-map>
+		<google-map-directions id="mapa" map="{{map}}" start-address="{{startaddress}}" end-address="{{endaddress}}" travel-mode="{{travelmode}}"></google-map-directions>		
+		</div>
+		
+		<paper-material elevation="2">
+			<paper-input label="Enter the start address.." bind-value="{{startaddress}}"></paper-input>
+			<paper-input label="Enter the end address.." bind-value="{{endaddress}}"></paper-input>
+			<paper-radio-group selected="{{travelmode}}" class="radio-group-list">
+				<paper-radio-button name="DRIVING">Driving</paper-radio-button>
+				<paper-radio-button name="BICYCLING">Bicycling</paper-radio-button>
+				<paper-radio-button name="WALKING">Walking</paper-radio-button>
+			</paper-radio-group><br>
+
+			<paper-button class="custom indigo" on-click="findStepInstructions"><iron-icon icon="search"></iron-icon>Generate Route!</paper-button><br>
+
+			<div class="distance"> {{distance}}</div>
+			<div class="duration"> {{duration}}</div>
+
+
+			<template is="dom-repeat" items="{{steps}}">
+				<paper-item style="padding: 10px;"><iron-icon icon="subdirectory-arrow-right"></iron-icon><span>{{item}}</span></paper-item>
+			</template>	
+			
+		</paper-material>
+	</div>
+		
+	
+	</template>
+	
+	
+	
+	<script>
+    Polymer({
+		is: "x-routegooglemaps",
+		properties: {
+			startaddress: {
+				type: String
+			},
+			endaddress: {
+				type: String
+			},
+			map: {
+				type: Object
+			},
+			travelmode: {
+				type: String
+			}, 
+			steps: {
+			type: Array,
+			value: []
+			},	
+			duration:{
+				type: String
+			},
+			distance: {
+				type: String
+			},
+			visibleMap:
+			{
+				type: Boolean
+				
+			}
+		},
+		
+		findStepInstructions: function()	{
+			this.steps=[];
+			this.distance="";
+			this.duration="";		
+			
+			
+			var r1 = new RegExp('<b>', 'g');
+			var r2 = new RegExp('</b>', 'g');
+			var r3 = new RegExp('<div style="font-size:0.9em">', 'g');
+			var r4 = new RegExp('</div>', 'g');
+			
+			directions=this.$.mapa.response;
+			for (var i in directions.routes) {
+				for (var j in directions.routes[i].legs) {
+					for (var k in directions.routes[i].legs[j].steps) {
+						// Get the current step in the direction
+						var step = directions.routes[i].legs[j].steps[k];
+						//var txt=k.toString()+". "+step.instructions;
+						var txt=step.instructions;
+						txt= txt.replace(r1, " ");
+						txt= txt.replace(r2, " ");
+						txt= txt.replace(r3, " ");
+						txt= txt.replace(r4, " ");
+						//this.steps[k]=txt;
+						this.push('steps',txt);
+						//console.log(txt);			
+					}
+				}
+			}
+			
+			this.distance=mapa.response.routes[0].legs[0].distance.text;
+			this.duration=mapa.response.routes[0].legs[0].duration.text;
+			
+			//console.log(this.steps);
+			
+			
+		}
+		
+	});
+		
+	</script>
+		
+</dom-module>
